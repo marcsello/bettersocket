@@ -64,7 +64,7 @@ class BetterSocketReader():
 
         if chunk:
             self._buffer += chunk  # append the recieved chunk to the buffer
-            return self._popOneFromBuffer()  # and check if a valid message recieved
+            return self._pop_one_from_buffer()  # and check if a valid message recieved
         else:
             raise ConnectionResetError()  # chunk is only none when the connection is dropped (otherwise it would have returned)
 
@@ -111,21 +111,20 @@ class BetterSocketIO:
     def __init__(self, sock: socket.socket, delimiter: bytes = b"\n"):
 
         self._socket = sock
-        self._delimiter = delimiter  # Wouldn't this be better in the Better Writer?
         self._reader = BetterSocketReader(sock, delimiter)
-        self._writer = BetterSocketWriter(sock)
+        self._writer = BetterSocketWriter(sock, delimiter)
 
-    def readline(self, chunksize: int = 1024) -> Optional[bytes]:
-        return self._reader.readline(chunksize)
+    def readframe(self, chunksize: int = 1024) -> Optional[bytes]:
+        return self._reader.readframe(chunksize)
 
-    def sendall(self, data: bytes):
-        self._writer.sendall(data)
+    def rawsendall(self, data: bytes):
+        self._writer.rawsendall(data)
 
-    def writeline(self, data: bytes):
+    def sendframe(self, data: bytes):
         """
-        This call automagically assingns the delimiter to the end of the message
+        Same as BetterSocketWriter.sendframe
         """
-        self.sendall(data + self._delimiter)
+        self._writer.sendframe(data)
 
     def fileno(self) -> int:
         return self._socket.fileno()
