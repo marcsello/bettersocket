@@ -126,9 +126,6 @@ class BetterSocketIO:
         """
         self._writer.sendframe(data)
 
-    def fileno(self) -> int:
-        return self._socket.fileno()
-
     def close(self):
         """
         Closes the underlying socket as well as the reader and writer instance for the socket.
