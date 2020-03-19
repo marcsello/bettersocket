@@ -4,7 +4,7 @@ import select
 from typing import Optional
 
 
-class BetterSocketReader():
+class BetterSocketReader(object):
     """
     This socket reader is designed to read delimited chunks from the socket efficently
     """
@@ -69,7 +69,7 @@ class BetterSocketReader():
             raise ConnectionResetError()  # chunk is only none when the connection is dropped (otherwise it would have returned)
 
 
-class BetterSocketWriter():
+class BetterSocketWriter(object):
     """
     This is a wrapper for sending with nonblocking sockets
     It kinda makes a nonblocking socket a little blocking in terms of sending, avoiding socket not ready errors
@@ -101,7 +101,7 @@ class BetterSocketWriter():
         self.rawsendall(data + self._delimiter)
 
 
-class BetterSocketIO:
+class BetterSocketIO(object):
     """
     This class combines BetterSocketReader and BetterSocketWriter together
     This is a simple wrapper that makes working with sockets just a little bit easier
