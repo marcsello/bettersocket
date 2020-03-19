@@ -6,7 +6,9 @@ from typing import Optional
 
 class BetterSocketReader(object):
     """
-    This socket reader is designed to read delimited chunks from the socket efficently
+    This is a wrapper for low-level sockets, for reading delimited frames.
+
+    Both blocking and non-blocking sockets work out of the box.
     """
 
     def __init__(self, sock: socket.socket, delimiter: bytes = b"\n"):
@@ -35,25 +37,25 @@ class BetterSocketReader(object):
 
     def reset(self):
         """
-        This call clears the internal buffer of the BetterSocketReader instance.
-        It does not alter the kernel buffer.
+        This call clears the internal buffer of the instance.
+        This does not clear the kernel buffer.
         """
         self._buffer = bytes()
 
-    def readframe(self, chunksize: int = 1024) -> Optional[str]:  # timeouting and nonblocking sockets both expected as well as blocking, expected to be called in a loop
+    def readframe(self, chunksize: int = 1024) -> Optional[str]:
         """
-        Returns one chunk of data between delimiters (without the delimiters)
-        Returns None if nothing to read (no delimiter recieved)
+        Returns one frame of data between delimiters (without the delimiters)
+        Returns None if nothing to read (no delimiter received)
         """
 
-        data = self._pop_one_from_buffer()  # before recieve, check if there is a valid data in the buffer
+        data = self._pop_one_from_buffer()  # before receive, check if there is a valid data in the buffer
         if data:
             return data
 
-        # actual recieving won't start until there is no more valid message left in the buffer
+        # actual receiving won't start until there is no more valid message left in the buffer
 
         try:
-            chunk = self._sock.recv(chunksize)  # recieve a chunk
+            chunk = self._sock.recv(chunksize)  # receive a chunk
         except socket.timeout:
             return None
         except socket.error as e:
@@ -63,16 +65,17 @@ class BetterSocketReader(object):
                 raise  # everything else should be raised
 
         if chunk:
-            self._buffer += chunk  # append the recieved chunk to the buffer
-            return self._pop_one_from_buffer()  # and check if a valid message recieved
+            self._buffer += chunk  # append the received chunk to the buffer
+            return self._pop_one_from_buffer()  # and check if a valid message received
         else:
             raise ConnectionResetError()  # chunk is only none when the connection is dropped (otherwise it would have returned)
 
 
 class BetterSocketWriter(object):
     """
-    This is a wrapper for sending with nonblocking sockets
-    It kinda makes a nonblocking socket a little blocking in terms of sending, avoiding socket not ready errors
+    This is a wrapper for low-level sockets, for sending delimited frames.
+
+    Both blocking and non-blocking sockets supported out of the box. Either way it waits for the socket to became ready.
     """
 
     def __init__(self, sock: socket.socket, delimiter: bytes = b"\n"):
@@ -85,7 +88,8 @@ class BetterSocketWriter(object):
 
     def rawsendall(self, data: bytes):
         """
-        This call is blocks until the socket is ready to send data. Then sends the data.
+        This call is blocks until the socket is ready. Then sends the data.
+        Does not append the delimiter.
         """
 
         writable = select.select([], [self._sock], [])[1]
@@ -95,17 +99,17 @@ class BetterSocketWriter(object):
 
     def sendframe(self, data: bytes):
         """
-        This call sends a frame.
-        Works the same as rawsendall
+        This call automatically appends the delimiter to the end of the data.
+        blocks until the socket is ready.
         """
         self.rawsendall(data + self._delimiter)
 
 
 class BetterSocketIO(object):
     """
-    This class combines BetterSocketReader and BetterSocketWriter together
-    This is a simple wrapper that makes working with sockets just a little bit easier
-    Also exposes the fileno (as well as some basic functionality) so this class can be used in select.select
+    This class combines BetterSocketReader and BetterSocketWriter together.
+    Functions from both classes are exposed.
+    This is the recommended wrapper to use.
     """
 
     def __init__(self, sock: socket.socket, delimiter: bytes = b"\n"):
@@ -115,9 +119,15 @@ class BetterSocketIO(object):
         self._writer = BetterSocketWriter(sock, delimiter)
 
     def readframe(self, chunksize: int = 1024) -> Optional[bytes]:
+        """
+        Same as BetterSocketReader.readframe
+        """
         return self._reader.readframe(chunksize)
 
     def rawsendall(self, data: bytes):
+        """
+        Same as BetterSocketWriter.rawsendall
+        """
         self._writer.rawsendall(data)
 
     def sendframe(self, data: bytes):
@@ -138,7 +148,7 @@ class BetterSocketIO(object):
         After this call no further calls should be attempted.
         """
         self._socket.close()
-        self._reader = None  # are those really necessary?
+        self._reader = None
         self._writer = None
 
     def __str__(self) -> str:
