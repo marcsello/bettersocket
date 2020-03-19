@@ -126,6 +126,12 @@ class BetterSocketIO:
         """
         self._writer.sendframe(data)
 
+    def reset(self):
+        """
+        Same as BetterSocketReader.reset
+        """
+        self._reader.reset()
+
     def close(self):
         """
         Closes the underlying socket as well as the reader and writer instance for the socket.
