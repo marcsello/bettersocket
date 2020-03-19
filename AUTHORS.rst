@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Pünkösd Marcell <punkosdmarcell@rocketmail.com>
+* Marcell Pünkösd <punkosdmarcell@rocketmail.com>
 
 Contributors
 ------------
