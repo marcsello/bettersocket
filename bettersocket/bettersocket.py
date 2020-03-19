@@ -141,10 +141,18 @@ class BetterSocketIO:
         self._reader = None  # are those really necessary?
         self._writer = None
 
-    def __str__(self):  # This is probably not very good for UINIX sockets
+    def __str__(self) -> str:
         try:
-            host, port = self._socket.getpeername()
-            return "Socket connected to {}:{}".format(host, port)
+
+            if self._socket.family in [socket.AF_INET, socket.AF_INET6]:
+                host, port = self._socket.getpeername()
+                return f"Socket connected to {host}:{port}"
+
+            else:  # including AF_UNIX
+                return f"Socket connected to {self._socket.getpeername()}"
 
         except (OSError, BrokenPipeError):
             return "Unconnected socket"
+
+    def __repr__(self) -> str:
+        return f"<{str(self)}>"
