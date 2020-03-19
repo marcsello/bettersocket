@@ -12,7 +12,7 @@ class BetterSocketReader():
     def __init__(self, sock: socket.socket, delimiter: bytes = b"\n"):
 
         if len(delimiter) != 1:
-            raise ProgrammingError("Delimiter must be 1 byte long")
+            raise ValueError("Delimiter must be 1 byte long")
 
         if not isinstance(sock, socket.socket):
             raise TypeError("Socket must be an instance of socket.socket")
