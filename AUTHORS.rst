@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Marcsello Hooves <punkosdmarcell@rocketmail.com>
+* Marcell Pünkösd <punkosdmarcell@rocketmail.com>
 
 Contributors
 ------------
